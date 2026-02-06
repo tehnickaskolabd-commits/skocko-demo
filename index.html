@@ -50,43 +50,68 @@
 </head>
 <body>
   <h1>Skočko Demo</h1>
-  <div class="symbols">
-    <button onclick="choose('car.png')"><img src="car.png"></button>
-    <button onclick="choose('gear.png')"><img src="gear.png"></button>
-    <button onclick="choose('mouse.png')"><img src="mouse.png"></button>
-    <button onclick="choose('lightbulb.png')"><img src="lightbulb.png"></button>
-    <button onclick="choose('smartphone.png')"><img src="smartphone.png"></button>
-    <button onclick="choose('computer.png')"><img src="computer.png"></button>
+
+  <!-- Unos imena -->
+  <div id="start">
+    <input type="text" id="playerName" placeholder="Unesi ime">
+    <button class="confirm" onclick="startGame()">Start</button>
   </div>
 
-  <div id="timer">Vrijeme: 120s</div>
+  <div id="game" style="display:none;">
+    <div class="symbols">
+      <button onclick="choose('car.png')"><img src="car.png"></button>
+      <button onclick="choose('gear.png')"><img src="gear.png"></button>
+      <button onclick="choose('mouse.png')"><img src="mouse.png"></button>
+      <button onclick="choose('lightbulb.png')"><img src="lightbulb.png"></button>
+      <button onclick="choose('smartphone.png')"><img src="smartphone.png"></button>
+      <button onclick="choose('computer.png')"><img src="computer.png"></button>
+    </div>
 
-  <div class="board" id="attempts"><h3>Pokušaji</h3></div>
+    <div id="timer">Vrijeme: 120s</div>
 
-  <div id="current"></div>
-  <button class="confirm" onclick="submitGuess()">Potvrdi</button>
-  <p id="message"></p>
-  <div id="secret"></div>
+    <div class="board" id="attempts"><h3>Pokušaji</h3></div>
+
+    <div id="current"></div>
+    <button class="confirm" onclick="submitGuess()">Potvrdi</button>
+    <p id="message"></p>
+    <div id="secret"></div>
+  </div>
 
   <script>
     const symbols = ['car.png','gear.png','mouse.png','lightbulb.png','smartphone.png','computer.png'];
-    const secret = Array.from({length:4}, () => symbols[Math.floor(Math.random()*symbols.length)]);
+    let secret = [];
     let currentGuess = [];
     let attempts = 0;
     let gameOver = false;
-
-    // TIMER
     let timeLeft = 120;
-    const timerElement = document.getElementById("timer");
-    const countdown = setInterval(() => {
-      if (timeLeft <= 0) {
-        clearInterval(countdown);
-        endGame("Vrijeme je isteklo!");
-      } else {
-        timeLeft--;
-        timerElement.textContent = "Vrijeme: " + timeLeft + "s";
+    let countdown;
+    let playerName = "";
+
+    function startGame() {
+      playerName = document.getElementById("playerName").value.trim();
+      if (!playerName) {
+        alert("Molim te unesi ime!");
+        return;
       }
-    }, 1000);
+      document.getElementById("start").style.display = "none";
+      document.getElementById("game").style.display = "block";
+
+      // generiši kombinaciju
+      secret = Array.from({length:4}, () => symbols[Math.floor(Math.random()*symbols.length)]);
+
+      // pokreni tajmer
+      timeLeft = 120;
+      const timerElement = document.getElementById("timer");
+      countdown = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(countdown);
+          endGame("Vrijeme je isteklo!");
+        } else {
+          timeLeft--;
+          timerElement.textContent = "Vrijeme: " + timeLeft + "s";
+        }
+      }, 1000);
+    }
 
     function choose(sym) {
       if (gameOver) return;
@@ -96,7 +121,6 @@
       }
     }
 
-    // prikaz trenutnog pokušaja sa mogućnošću brisanja
     function renderCurrentGuess() {
       const preview = document.getElementById('current');
       preview.innerHTML = '';
@@ -106,7 +130,7 @@
         const cell = document.createElement('div');
         cell.className = 'cell';
         cell.innerHTML = `<img src="${sym}">`;
-        // klik na ikonicu briše tu poziciju
+        // klik briše ikonicu
         cell.onclick = () => {
           currentGuess.splice(index, 1);
           renderCurrentGuess();
@@ -122,11 +146,9 @@
 
       attempts++;
 
-      // red sa pokušajem i feedbackom
       const row = document.createElement('div');
       row.className = 'row';
 
-      // pokušaj
       currentGuess.forEach(sym => {
         const cell = document.createElement('div');
         cell.className = 'cell';
@@ -134,7 +156,6 @@
         row.appendChild(cell);
       });
 
-      // feedback
       const feedback = getFeedback(secret, currentGuess);
       const fbDiv = document.createElement('div');
       fbDiv.className = 'feedback';
@@ -147,7 +168,6 @@
 
       document.getElementById('attempts').appendChild(row);
 
-      // provjera
       if (currentGuess.join('') === secret.join('')) {
         endGame("Bravo! Pogodio si u " + attempts + " pokušaja.");
       } else if (attempts >= 6) {
@@ -163,7 +183,6 @@
       let secretCopy = [...secret];
       let guessCopy = [...guess];
 
-      // crveni
       for (let i = 0; i < 4; i++) {
         if (guessCopy[i] === secretCopy[i]) {
           reds++;
@@ -172,7 +191,6 @@
         }
       }
 
-      // žuti
       for (let i = 0; i < 4; i++) {
         if (guessCopy[i] !== null) {
           let index = secretCopy.indexOf(guessCopy[i]);
@@ -196,6 +214,24 @@
       clearInterval(countdown);
       document.getElementById('message').textContent = msg;
       showSecret();
+
+      // onemogući dugmad
+      document.querySelectorAll(".symbols button").forEach(btn => btn.disabled = true);
+      document.querySelector(".confirm").disabled = true;
+
+      // rezultat
+      let result = {
+        name: playerName,
+        attempts: attempts,
+        time: 120 - timeLeft,
+        success: msg.includes("Bravo")
+      };
+
+      // slanje u Google Sheets
+      fetch("YOUR_GOOGLE_SCRIPT_URL", {
+        method: "POST",
+        body: JSON.stringify(result),
+      });
     }
 
     function showSecret() {
@@ -206,11 +242,4 @@
       secret.forEach(sym => {
         const cell = document.createElement('div');
         cell.className = 'cell';
-        cell.innerHTML = `<img src="${sym}">`;
-        row.appendChild(cell);
-      });
-      secretDiv.appendChild(row);
-    }
-  </script>
-</body>
-</html>
+        cell.innerHTML
