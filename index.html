@@ -4,21 +4,101 @@
   <meta charset="UTF-8">
   <title>Skočko Demo</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
-    .symbols { margin: 20px; }
-    .symbols button { margin: 5px; border: none; background: none; cursor: pointer; }
-    .symbols img { width: 40px; height: 40px; }
-    .board { display: flex; justify-content: center; margin-top: 20px; }
-    .attempts, .answers { margin: 0 20px; }
-    .row { display: flex; justify-content: center; margin: 5px; }
-    .cell { width: 40px; height: 40px; border: 1px solid #333; margin: 2px; display:flex; align-items:center; justify-content:center; }
-    .cell img { width: 40px; height: 40px; }
-    .feedback span { width: 20px; height: 20px; display: inline-block; border-radius: 50%; margin: 2px; }
-    .red { background: red; }
-    .yellow { background: gold; }
-    .black { background: black; }
-    #timer { font-size: 20px; margin-top: 10px; }
-    #secret { margin-top: 20px; }
+   body { 
+  font-family: Arial, sans-serif; 
+  text-align: center; 
+  margin: 0; 
+  padding: 0; 
+}
+
+.symbols { 
+  margin: 20px; 
+  display: flex; 
+  flex-wrap: wrap; 
+  justify-content: center; 
+}
+
+.symbols button { 
+  margin: 5px; 
+  border: none; 
+  background: none; 
+  cursor: pointer; 
+}
+
+.symbols img { 
+  width: 12vw;   /* širina ikone je 12% širine ekrana */
+  max-width: 60px; /* na desktopu ne ide preko 60px */
+  height: auto; 
+}
+
+.board { 
+  display: flex; 
+  justify-content: center; 
+  flex-wrap: wrap; 
+  margin-top: 20px; 
+}
+
+.attempts, .answers { 
+  margin: 0 20px; 
+}
+
+.row { 
+  display: flex; 
+  justify-content: center; 
+  margin: 5px; 
+  flex-wrap: wrap; 
+}
+
+.cell { 
+  width: 12vw; 
+  max-width: 60px; 
+  height: auto; 
+  border: 1px solid #333; 
+  margin: 2px; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+}
+
+.cell img { 
+  width: 100%; 
+  height: auto; 
+}
+
+.feedback span { 
+  width: 5vw; 
+  max-width: 25px; 
+  height: 5vw; 
+  max-height: 25px; 
+  display: inline-block; 
+  border-radius: 50%; 
+  margin: 2px; 
+}
+
+.red { background: red; }
+.yellow { background: gold; }
+.black { background: black; }
+
+#timer { 
+  font-size: 20px; 
+  margin-top: 10px; 
+}
+
+#secret { 
+  margin-top: 20px; 
+}
+
+/* Media query za male ekrane (telefoni) */
+@media (max-width: 600px) {
+  .symbols img, .cell { 
+    width: 18vw; 
+    max-width: none; 
+  }
+  .feedback span { 
+    width: 8vw; 
+    height: 8vw; 
+  }
+}
   </style>
 </head>
 <body>
