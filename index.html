@@ -35,7 +35,6 @@
     #timer { font-size: 20px; margin-top: 10px; }
     #secret { margin-top: 20px; }
 
-    /* Povećano dugme */
     button.confirm {
       font-size: 24px;
       padding: 15px 30px;
@@ -242,4 +241,9 @@
       secret.forEach(sym => {
         const cell = document.createElement('div');
         cell.className = 'cell';
-        cell.innerHTML
+        cell.innerHTML = `<img src="${sym}">`;
+        row.appendChild(cell);
+      });
+      secretDiv.appendChild(row);
+    }
+  </script
