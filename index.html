@@ -34,6 +34,18 @@
 
     #timer { font-size: 20px; margin-top: 10px; }
     #secret { margin-top: 20px; }
+
+    /* Povećano dugme */
+    button.confirm {
+      font-size: 24px;
+      padding: 15px 30px;
+      margin-top: 10px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
@@ -52,7 +64,7 @@
   <div class="board" id="attempts"><h3>Pokušaji</h3></div>
 
   <div id="current"></div>
-  <button onclick="submitGuess()">Potvrdi</button>
+  <button class="confirm" onclick="submitGuess()">Potvrdi</button>
   <p id="message"></p>
   <div id="secret"></div>
 
@@ -84,15 +96,21 @@
       }
     }
 
+    // prikaz trenutnog pokušaja sa mogućnošću brisanja
     function renderCurrentGuess() {
       const preview = document.getElementById('current');
       preview.innerHTML = '';
       const row = document.createElement('div');
       row.className = 'row';
-      currentGuess.forEach(sym => {
+      currentGuess.forEach((sym, index) => {
         const cell = document.createElement('div');
         cell.className = 'cell';
         cell.innerHTML = `<img src="${sym}">`;
+        // klik na ikonicu briše tu poziciju
+        cell.onclick = () => {
+          currentGuess.splice(index, 1);
+          renderCurrentGuess();
+        };
         row.appendChild(cell);
       });
       preview.appendChild(row);
