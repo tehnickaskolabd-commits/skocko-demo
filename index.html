@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <title>Skočko Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    .symbols { margin: 20px; }
+    .symbols button { margin: 5px; border: none; background: none; cursor: pointer; }
+    .symbols img { width: 40px; height: 40px; }
+    .board { display: flex; justify-content: center; margin-top: 20px; }
+    .attempts, .answers { margin: 0 20px; }
+    .row { display: flex; justify-content: center; margin: 5px; }
+    .cell { width: 40px; height: 40px; border: 1px solid #333; margin: 2px; display:flex; align-items:center; justify-content:center; }
+    .cell img { width: 40px; height: 40px; }
+    .feedback span { width: 20px; height: 20px; display: inline-block; border-radius: 50%; margin: 2px; }
+    .red { background: red; }
+    .yellow { background: gold; }
+    .black { background: black; }
+    #timer { font-size: 20px; margin-top: 10px; }
+    #secret { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Skočko Demo</h1>
+  <div class="symbols">
+    <button onclick="choose('car.png')"><img src="car.png"></button>
+    <button onclick="choose('gear.png')"><img src="gear.png"></button>
+    <button onclick="choose('mouse.png')"><img src="mouse.png"></button>
+    <button onclick="choose('lightbulb.png')"><img src="lightbulb.png"></button>
+    <button onclick="choose('smartphone.png')"><img src="smartphone.png"></button>
+    <button onclick="choose('computer.png')"><img src="computer.png"></button>
+  </div>
+
+  <div id="timer">Vrijeme: 120s</div>
+
+  <div class="board">
+    <div class="attempts" id="attempts"><h3>Pokušaji</h3></div>
+    <div class="answers" id="answers"><h3>Odgovori</h3></div>
+  </div>
+
+  <div id="current"></div>
+  <button onclick="submitGuess()">Potvrdi</button>
+  <p id="message"></p>
+  <div id="secret"></div>
+
+  <script>
+    const symbols = ['car.png','gear.png','mouse.png','lightbulb.png','smartphone.png','computer.png'];
+    const secret = Array.from({length:4}, () => symbols[Math.floor(Math.random()*symbols.length)]);
+    let currentGuess = [];
+    let attempts = 0;
+    let gameOver = false;
+
+    // TIMER 120 sekundi
+    let timeLeft = 120;
+    const timerElement = document.getElementById("timer");
+    const countdown = setInterval(() => {
+      if (timeLeft <= 0) {
+        clearInterval(countdown);
+        endGame("Vrijeme je isteklo!");
+      } else {
+        timeLeft--;
+        timerElement.textContent = "Vrijeme: " + timeLeft + "s";
+      }
+    }, 1000);
+
+    function choose(sym) {
+      if (gameOver) return;
+      if (currentGuess.length < 4) {
+        currentGuess.push(sym);
+        renderCurrentGuess();
+      }
+    }
+
+    function renderCurrentGuess() {
+      const preview = document.getElementById('current');
+      preview.innerHTML = '';
+      const row = document.createElement('div');
+      row.className = 'row';
+      currentGuess.forEach(sym => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.innerHTML = `<img src="${sym}">`;
+        row.appendChild(cell);
+      });
+      preview.appendChild(row);
+    }
+
+    function submitGuess() {
+      if (gameOver) return;
+      if (currentGuess.length < 4) return;
+
+      attempts++;
+
+      // lijevo: pokušaj
+      const row = document.createElement('div');
+      row.className = 'row';
+      currentGuess.forEach(sym => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.innerHTML = `<img src="${sym}">`;
+        row.appendChild(cell);
+      });
+      document.getElementById('attempts').appendChild(row);
+
+      // desno: odgovori (ispravna logika)
+      const feedback = getFeedback(secret, currentGuess);
+
+      const fbDiv = document.createElement('div');
+      fbDiv.className = 'row feedback';
+      feedback.forEach(color => {
+        const dot = document.createElement('span');
+        dot.className = color;
+        fbDiv.appendChild(dot);
+      });
+      document.getElementById('answers').appendChild(fbDiv);
+
+      // provjera
+      if (currentGuess.join('') === secret.join('')) {
+        endGame("Bravo! Pogodio si u " + attempts + " pokušaja.");
+      } else if (attempts >= 6) {
+        endGame("Iskoristio si svih 6 pokušaja!");
+      } else {
+        currentGuess = []; // reset za novi pokušaj
+        document.getElementById('current').innerHTML = '';
+      }
+    }
+
+    // Ispravna logika za feedback (brojanje crvenih, žutih, crnih)
+    function getFeedback(secret, guess) {
+      let reds = 0;
+      let yellows = 0;
+
+      let secretCopy = [...secret];
+      let guessCopy = [...guess];
+
+      // prvo crveni
+      for (let i = 0; i < 4; i++) {
+        if (guessCopy[i] === secretCopy[i]) {
+          reds++;
+          secretCopy[i] = null;
+          guessCopy[i] = null;
+        }
+      }
+
+      // zatim žuti
+      for (let i = 0; i < 4; i++) {
+        if (guessCopy[i] !== null) {
+          let index = secretCopy.indexOf(guessCopy[i]);
+          if (index !== -1) {
+            yellows++;
+            secretCopy[index] = null;
+          }
+        }
+      }
+
+      let blacks = 4 - reds - yellows;
+
+      let feedback = [];
+      for (let i = 0; i < reds; i++) feedback.push('red');
+      for (let i = 0; i < yellows; i++) feedback.push('yellow');
+      for (let i = 0; i < blacks; i++) feedback.push('black');
+
+      return feedback;
+    }
+
+    function endGame(msg) {
+      gameOver = true;
+      clearInterval(countdown);
+      document.getElementById('message').textContent = msg;
+      showSecret();
+      sendResult(attempts);
+    }
+
+    function showSecret() {
+      const secretDiv = document.getElementById('secret');
+      secretDiv.innerHTML = "<h3>Zamišljena kombinacija:</h3>";
+      const row = document.createElement('div');
+      row.className = 'row';
+      secret.forEach(sym => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.innerHTML = `<img src="${sym}">`;
+        row.appendChild(cell);
+      });
+      secretDiv.appendChild(row);
+    }
+
+    // Slanje rezultata u Google Sheets
+    function sendResult(score) {
+      fetch("YOUR_GOOGLE_SCRIPT_URL", {
+        method: "POST",
+        body: JSON.stringify({result: score}),
+      });
+    }
+  </script>
+</body>
+</html>
